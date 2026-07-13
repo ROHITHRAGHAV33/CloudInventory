@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from 'react';
 import { auth, isFirebaseConfigured } from '../firebase';
 import { 
   createUserWithEmailAndPassword, 
@@ -52,16 +53,19 @@ export const AuthProvider = ({ children }) => {
       return unsubscribe;
     } else {
       // Mock session restoration from localStorage
-      const mockSession = localStorage.getItem('mock_session_uid');
-      if (mockSession) {
-        setCurrentUser({ uid: mockSession, email: '' }); // stub auth user
-        fetchProfileAndBusiness(mockSession).then(() => setLoading(false));
-      } else {
-        setCurrentUser(null);
-        setUserProfile(null);
-        setBusiness(null);
+      const restoreSession = async () => {
+        const mockSession = localStorage.getItem('mock_session_uid');
+        if (mockSession) {
+          setCurrentUser({ uid: mockSession, email: '' }); // stub auth user
+          await fetchProfileAndBusiness(mockSession);
+        } else {
+          setCurrentUser(null);
+          setUserProfile(null);
+          setBusiness(null);
+        }
         setLoading(false);
-      }
+      };
+      restoreSession();
     }
   }, []);
 

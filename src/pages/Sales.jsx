@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
 import { Search, ShoppingCart, Trash2, Printer, X, CheckCircle, Plus, Minus, User } from 'lucide-react';
@@ -20,11 +20,7 @@ export default function Sales() {
   const [lastSaleRecord, setLastSaleRecord] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  useEffect(() => {
-    loadProducts();
-  }, [business]);
-
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     if (!business) return;
     try {
       setLoading(true);
@@ -35,7 +31,14 @@ export default function Sales() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [business]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProducts();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadProducts]);
 
   // Cart actions
   const addToCart = (product) => {

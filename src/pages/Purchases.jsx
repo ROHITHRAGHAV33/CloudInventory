@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
-import { Plus, Search, Calendar, FileText, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Search, FileText, AlertCircle } from 'lucide-react';
 
 export default function Purchases() {
   const { business } = useAuth();
@@ -27,30 +27,7 @@ export default function Purchases() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, [business]);
-
-  // Handle dashboard reorder redirect query parameters
-  useEffect(() => {
-    if (products.length > 0 && !loading) {
-      const params = new URLSearchParams(location.search);
-      const prodId = params.get('productId');
-      if (prodId) {
-        // Pre-fill
-        const matchingProd = products.find(p => p.id === prodId);
-        if (matchingProd) {
-          setSelectedProductId(prodId);
-          setUnitPrice(matchingProd.buyingPrice || '');
-          setIsFormOpen(true);
-          // clear params so reloading doesn't open it again
-          navigate('/purchases', { replace: true });
-        }
-      }
-    }
-  }, [location, products, loading]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!business) return;
     try {
       setLoading(true);
@@ -70,7 +47,34 @@ export default function Purchases() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [business]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadData]);
+
+  // Handle dashboard reorder redirect query parameters
+  useEffect(() => {
+    if (products.length > 0 && !loading) {
+      const params = new URLSearchParams(location.search);
+      const prodId = params.get('productId');
+      if (prodId) {
+        // Pre-fill
+        const matchingProd = products.find(p => p.id === prodId);
+        if (matchingProd) {
+          setTimeout(() => {
+            setSelectedProductId(prodId);
+            setUnitPrice(matchingProd.buyingPrice || '');
+            setIsFormOpen(true);
+            navigate('/purchases', { replace: true });
+          }, 0);
+        }
+      }
+    }
+  }, [location, products, loading, navigate]);
 
   // Pre-fill buying price when product changes
   const handleProductChange = (productId) => {

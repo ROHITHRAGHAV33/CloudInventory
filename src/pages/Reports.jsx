@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
-import { BarChart3, TrendingUp, DollarSign, Briefcase, Calendar, ChevronDown } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Briefcase, Calendar } from 'lucide-react';
 
 export default function Reports() {
   const { business } = useAuth();

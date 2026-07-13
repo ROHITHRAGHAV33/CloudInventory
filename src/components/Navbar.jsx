@@ -1,10 +1,9 @@
-import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Database, Cloud, User, ShieldAlert, Menu } from 'lucide-react';
+import { Database, Cloud, User, Menu } from 'lucide-react';
 
 export default function Navbar({ onMenuClick }) {
-  const { userProfile, business, isMockMode } = useAuth();
+  const { userProfile, isMockMode } = useAuth();
   const location = useLocation();
 
   // Convert pathname to title

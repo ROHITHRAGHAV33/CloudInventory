@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
 import { 
@@ -7,7 +7,6 @@ import {
   Package, 
   AlertTriangle, 
   Calendar, 
-  Activity, 
   Layers, 
   Scale 
 } from 'lucide-react';
@@ -65,7 +64,7 @@ export default function Dashboard() {
     if (!business) return null;
 
     switch (business.type) {
-      case 'medical':
+      case 'medical': {
         // Medicine Expiry Tracker
         // Calculate items that are expired or expiring within 90 days
         const today = new Date();
@@ -118,8 +117,9 @@ export default function Dashboard() {
             )}
           </div>
         );
+      }
 
-      case 'rice':
+      case 'rice': {
         // Rice Stock Distribution (Brands & Weight)
         // Group bag stocks by weight and brand
         const brandGroups = {};
@@ -179,9 +179,10 @@ export default function Dashboard() {
             </div>
           </div>
         );
+      }
 
       case 'grocery':
-      default:
+      default: {
         // Grocery Store category split
         const categories = {};
         products.forEach(p => {
@@ -209,6 +210,7 @@ export default function Dashboard() {
             )}
           </div>
         );
+      }
     }
   };
 

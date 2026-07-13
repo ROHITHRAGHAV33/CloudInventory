@@ -9,8 +9,7 @@ import {
   query, 
   where, 
   getDocs, 
-  addDoc, 
-  orderBy
+  addDoc
 } from 'firebase/firestore';
 
 // Helper to generate unique IDs for mock mode

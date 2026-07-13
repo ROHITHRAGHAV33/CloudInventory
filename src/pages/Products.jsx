@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
-import { Plus, Search, Edit2, Trash2, X, AlertTriangle, Layers, Calendar, Scale, Tag } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, AlertTriangle, Calendar, Scale } from 'lucide-react';
 
 export default function Products() {
   const { business } = useAuth();
@@ -33,11 +33,7 @@ export default function Products() {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadProducts();
-  }, [business]);
-
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     if (!business) return;
     try {
       setLoading(true);
@@ -48,7 +44,14 @@ export default function Products() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [business]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProducts();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadProducts]);
 
   const openAddModal = () => {
     setModalMode('add');

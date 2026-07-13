@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbService';
 import { Plus, Search, Edit2, Trash2, X, AlertTriangle } from 'lucide-react';
@@ -24,11 +24,7 @@ export default function Suppliers() {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadSuppliers();
-  }, [business]);
-
-  async function loadSuppliers() {
+  const loadSuppliers = useCallback(async () => {
     if (!business) return;
     try {
       setLoading(true);
@@ -39,7 +35,14 @@ export default function Suppliers() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [business]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSuppliers();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadSuppliers]);
 
   const openAddModal = () => {
     setModalMode('add');
