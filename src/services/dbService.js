@@ -19,6 +19,16 @@ const generateId = () => {
     : Math.random().toString(36).substring(2, 15);
 };
 
+// Helper to set a timeout on Firestore promises to prevent infinite hangs
+const withTimeout = (promise, timeoutMs = 4000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firestore operation timed out')), timeoutMs)
+    )
+  ]);
+};
+
 // --- MOCK STORAGE HELPERS (localStorage) ---
 const getMockData = (key) => {
   const data = localStorage.getItem(key);
@@ -44,7 +54,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const userRef = doc(db, 'users', uid);
-        const userSnap = await getDoc(userRef);
+        const userSnap = await withTimeout(getDoc(userRef));
         return userSnap.exists() ? userSnap.data() : null;
       } catch (error) {
         console.error("Firestore getUserProfile failed, falling back to local:", error);
@@ -71,7 +81,7 @@ export const dbService = {
 
     if (isFirebaseConnected) {
       try {
-        await setDoc(doc(db, 'users', uid), profile);
+        await withTimeout(setDoc(doc(db, 'users', uid), profile));
         return profile;
       } catch (error) {
         console.error("Firestore createUserProfile failed, falling back to local:", error);
@@ -96,7 +106,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const bizRef = doc(db, 'businesses', businessId);
-        const bizSnap = await getDoc(bizRef);
+        const bizSnap = await withTimeout(getDoc(bizRef));
         return bizSnap.exists() ? bizSnap.data() : null;
       } catch (error) {
         console.error("Firestore getBusiness failed, falling back to local:", error);
@@ -121,7 +131,7 @@ export const dbService = {
 
     if (isFirebaseConnected) {
       try {
-        await setDoc(doc(db, 'businesses', businessId), newBusiness);
+        await withTimeout(setDoc(doc(db, 'businesses', businessId), newBusiness));
         return newBusiness;
       } catch (error) {
         console.error("Firestore createBusiness failed, falling back to local:", error);
@@ -140,7 +150,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const q = query(collection(db, 'products'), where('businessId', '==', businessId));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await withTimeout(getDocs(q));
         const products = [];
         querySnapshot.forEach((doc) => {
           products.push({ id: doc.id, ...doc.data() });
@@ -171,7 +181,7 @@ export const dbService = {
 
     if (isFirebaseConnected) {
       try {
-        const docRef = await addDoc(collection(db, 'products'), newProduct);
+        const docRef = await withTimeout(addDoc(collection(db, 'products'), newProduct));
         return { id: docRef.id, ...newProduct };
       } catch (error) {
         console.error("Firestore addProduct failed, falling back to local:", error);
@@ -196,7 +206,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const docRef = doc(db, 'products', productId);
-        await updateDoc(docRef, updatedFields);
+        await withTimeout(updateDoc(docRef, updatedFields));
         return { id: productId, ...updatedFields };
       } catch (error) {
         console.error("Firestore updateProduct failed, falling back to local:", error);
@@ -226,7 +236,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const docRef = doc(db, 'products', productId);
-        await deleteDoc(docRef);
+        await withTimeout(deleteDoc(docRef));
         return true;
       } catch (error) {
         console.error("Firestore deleteProduct failed, falling back to local:", error);
@@ -249,7 +259,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const q = query(collection(db, 'suppliers'), where('businessId', '==', businessId));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await withTimeout(getDocs(q));
         const suppliers = [];
         querySnapshot.forEach((doc) => {
           suppliers.push({ id: doc.id, ...doc.data() });
@@ -276,7 +286,7 @@ export const dbService = {
 
     if (isFirebaseConnected) {
       try {
-        const docRef = await addDoc(collection(db, 'suppliers'), newSupplier);
+        const docRef = await withTimeout(addDoc(collection(db, 'suppliers'), newSupplier));
         return { id: docRef.id, ...newSupplier };
       } catch (error) {
         console.error("Firestore addSupplier failed, falling back to local:", error);
@@ -297,7 +307,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const docRef = doc(db, 'suppliers', supplierId);
-        await updateDoc(docRef, updatedFields);
+        await withTimeout(updateDoc(docRef, updatedFields));
         return { id: supplierId, ...updatedFields };
       } catch (error) {
         console.error("Firestore updateSupplier failed, falling back to local:", error);
@@ -327,7 +337,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const docRef = doc(db, 'suppliers', supplierId);
-        await deleteDoc(docRef);
+        await withTimeout(deleteDoc(docRef));
         return true;
       } catch (error) {
         console.error("Firestore deleteSupplier failed, falling back to local:", error);
@@ -350,7 +360,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const q = query(collection(db, 'purchases'), where('businessId', '==', businessId));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await withTimeout(getDocs(q));
         const purchases = [];
         querySnapshot.forEach((doc) => {
           purchases.push({ id: doc.id, ...doc.data() });
@@ -388,14 +398,14 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         // 1. Log the purchase
-        const purchaseRef = await addDoc(collection(db, 'purchases'), newPurchase);
+        const purchaseRef = await withTimeout(addDoc(collection(db, 'purchases'), newPurchase));
         
         // 2. Fetch and update the product stock
         const productRef = doc(db, 'products', purchaseData.productId);
-        const productSnap = await getDoc(productRef);
+        const productSnap = await withTimeout(getDoc(productRef));
         if (productSnap.exists()) {
           const currentStock = Number(productSnap.data().stock) || 0;
-          await updateDoc(productRef, { stock: currentStock + quantity });
+          await withTimeout(updateDoc(productRef, { stock: currentStock + quantity }));
         }
         return { id: purchaseRef.id, ...newPurchase };
       } catch (error) {
@@ -430,7 +440,7 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         const q = query(collection(db, 'sales'), where('businessId', '==', businessId));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await withTimeout(getDocs(q));
         const sales = [];
         querySnapshot.forEach((doc) => {
           sales.push({ id: doc.id, ...doc.data() });
@@ -477,15 +487,15 @@ export const dbService = {
     if (isFirebaseConnected) {
       try {
         // 1. Log sale record
-        const saleRef = await addDoc(collection(db, 'sales'), newSale);
+        const saleRef = await withTimeout(addDoc(collection(db, 'sales'), newSale));
 
         // 2. Loop and update stocks
         for (const item of items) {
           const productRef = doc(db, 'products', item.productId);
-          const productSnap = await getDoc(productRef);
+          const productSnap = await withTimeout(getDoc(productRef));
           if (productSnap.exists()) {
             const currentStock = Number(productSnap.data().stock) || 0;
-            await updateDoc(productRef, { stock: Math.max(0, currentStock - item.quantity) });
+            await withTimeout(updateDoc(productRef, { stock: Math.max(0, currentStock - item.quantity) }));
           }
         }
         return { id: saleRef.id, ...newSale };
