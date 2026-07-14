@@ -28,7 +28,10 @@ export default function Purchases() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = useCallback(async () => {
-    if (!business) return;
+    if (!business) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const [prodList, supList, purList] = await Promise.all([

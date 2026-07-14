@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
-import { auth, isFirebaseConfigured } from '../firebase';
+import { auth, isFirebaseConnected, disableFirebaseConnection } from '../firebase';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (isFirebaseConfigured && auth) {
+    if (isFirebaseConnected && auth) {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
         if (user) {
@@ -72,18 +72,31 @@ export const AuthProvider = ({ children }) => {
   // --- SIGN UP ---
   const signup = async (email, password, name, phone, businessName, businessType) => {
     setLoading(true);
+    let newBiz;
+    let uid;
+    let userCredential;
+
     try {
       // 1. Create the business record first to get the businessId
-      const newBiz = await dbService.createBusiness({
+      newBiz = await dbService.createBusiness({
         name: businessName,
         type: businessType
       });
 
-      let uid;
-      if (isFirebaseConfigured) {
-        // Firebase Authentication
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        uid = userCredential.user.uid;
+      if (isFirebaseConnected) {
+        try {
+          // Firebase Authentication
+          userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          uid = userCredential.user.uid;
+        } catch (authErr) {
+          console.error("Firebase Auth signup failed, checking if we should fallback to Mock:", authErr);
+          if (authErr.code === 'auth/network-request-failed' || authErr.code === 'auth/internal-error') {
+            disableFirebaseConnection();
+            uid = 'mock_uid_' + Math.random().toString(36).substring(2, 9);
+          } else {
+            throw authErr;
+          }
+        }
       } else {
         // Mock Authentication
         const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
@@ -94,15 +107,39 @@ export const AuthProvider = ({ children }) => {
       }
 
       // 2. Create the user profile linked to the business
-      const profile = await dbService.createUserProfile(uid, {
-        name,
-        email,
-        phone,
-        businessId: newBiz.id,
-        role: 'owner'
-      });
+      let profile;
+      try {
+        profile = await dbService.createUserProfile(uid, {
+          name,
+          email,
+          phone,
+          businessId: newBiz.id,
+          role: 'owner'
+        });
+      } catch (profileErr) {
+        console.error("Firestore createUserProfile failed:", profileErr);
+        // Clean up partially registered auth user if needed
+        if (isFirebaseConnected && userCredential?.user) {
+          try {
+            await userCredential.user.delete();
+          } catch (deleteErr) {
+            console.error("Could not delete half-created Auth user:", deleteErr);
+          }
+        }
+        throw profileErr;
+      }
 
-      if (!isFirebaseConfigured) {
+      if (!isFirebaseConnected) {
+        // Save the credentials in local storage for local demo logins
+        const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+        const existingIdx = mockUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+        const userObj = { uid, email, name, phone, businessId: newBiz.id, role: 'owner' };
+        if (existingIdx !== -1) {
+          mockUsers[existingIdx] = userObj;
+        } else {
+          mockUsers.push(userObj);
+        }
+        localStorage.setItem('mock_users', JSON.stringify(mockUsers));
         localStorage.setItem('mock_session_uid', uid);
         setCurrentUser({ uid, email });
       }
@@ -123,17 +160,32 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       let uid;
-      if (isFirebaseConfigured) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        uid = userCredential.user.uid;
+      if (isFirebaseConnected) {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          uid = userCredential.user.uid;
+        } catch (authErr) {
+          console.error("Firebase Auth login failed, checking if we should fallback to Mock:", authErr);
+          if (authErr.code === 'auth/network-request-failed' || authErr.code === 'auth/internal-error') {
+            disableFirebaseConnection();
+            const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+            const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            if (!user) {
+              throw new Error('User not found. Register an account first.', { cause: authErr });
+            }
+            uid = user.uid;
+            localStorage.setItem('mock_session_uid', uid);
+            setCurrentUser({ uid, email });
+          } else {
+            throw authErr;
+          }
+        }
       } else {
         const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
         const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
         if (!user) {
           throw new Error('User not found. Register an account first.');
         }
-        // In simple local mock mode, let's allow any password for demo purposes, 
-        // or check for simple validation. We will just log them in.
         uid = user.uid;
         localStorage.setItem('mock_session_uid', uid);
         setCurrentUser({ uid, email });
@@ -153,7 +205,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      if (isFirebaseConfigured) {
+      if (isFirebaseConnected) {
         await firebaseSignOut(auth);
       } else {
         localStorage.removeItem('mock_session_uid');
@@ -177,7 +229,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     login,
     logout,
-    isMockMode: !isFirebaseConfigured
+    isMockMode: !isFirebaseConnected
   };
 
   return (

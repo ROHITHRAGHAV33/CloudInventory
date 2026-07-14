@@ -23,6 +23,15 @@ let app;
 let auth = null;
 let db = null;
 
+export let isFirebaseConnected = isFirebaseConfigured;
+
+export function disableFirebaseConnection() {
+  if (isFirebaseConnected) {
+    isFirebaseConnected = false;
+    console.warn('Firebase connection or database operations failed. Switched to Local Mock Mode.');
+  }
+}
+
 if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -31,6 +40,7 @@ if (isFirebaseConfigured) {
     console.log('Firebase successfully initialized in Real-Cloud Mode.');
   } catch (error) {
     console.error('Error initializing Firebase, falling back to Local Mock Mode:', error);
+    isFirebaseConnected = false;
   }
 } else {
   console.log('Firebase configuration not found. Running in Local Mock Mode (using localStorage).');

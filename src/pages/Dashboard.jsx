@@ -21,7 +21,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function loadDashboardData() {
-      if (!business) return;
+      if (!business) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [prodList, salesList, purchaseList] = await Promise.all([

@@ -21,7 +21,10 @@ export default function Sales() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const loadProducts = useCallback(async () => {
-    if (!business) return;
+    if (!business) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const list = await dbService.getProducts(business.id);

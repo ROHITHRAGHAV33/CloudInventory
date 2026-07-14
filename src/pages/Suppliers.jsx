@@ -25,7 +25,10 @@ export default function Suppliers() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadSuppliers = useCallback(async () => {
-    if (!business) return;
+    if (!business) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const list = await dbService.getSuppliers(business.id);

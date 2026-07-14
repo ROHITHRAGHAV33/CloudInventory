@@ -13,7 +13,10 @@ export default function Reports() {
 
   useEffect(() => {
     async function loadReportData() {
-      if (!business) return;
+      if (!business) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [salesList, purchaseList, prodList] = await Promise.all([

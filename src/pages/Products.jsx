@@ -34,7 +34,10 @@ export default function Products() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadProducts = useCallback(async () => {
-    if (!business) return;
+    if (!business) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const list = await dbService.getProducts(business.id);
