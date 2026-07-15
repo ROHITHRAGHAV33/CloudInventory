@@ -1,4 +1,4 @@
-import { db, isFirebaseConnected, disableFirebaseConnection } from '../firebase';
+import { db } from '../firebase';
 import { 
   doc, 
   getDoc, 
@@ -12,7 +12,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 
-// Helper to generate unique IDs for mock mode
+// Helper to generate unique IDs
 const generateId = () => {
   return typeof crypto !== 'undefined' && crypto.randomUUID 
     ? crypto.randomUUID() 
@@ -29,43 +29,13 @@ const withTimeout = (promise, timeoutMs = 4000) => {
   ]);
 };
 
-// --- MOCK STORAGE HELPERS (localStorage) ---
-const getMockData = (key) => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
-};
-
-const saveMockData = (key, data) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
-
-const insertMockRecord = (key, record) => {
-  const data = getMockData(key);
-  const newRecord = { ...record, id: record.id || generateId(), createdAt: new Date().toISOString() };
-  data.push(newRecord);
-  saveMockData(key, data);
-  return newRecord;
-};
-
 // --- DATABASE SERVICE INTERFACE ---
 export const dbService = {
   // ================= USER OPERATIONS =================
   async getUserProfile(uid) {
-    if (isFirebaseConnected) {
-      try {
-        const userRef = doc(db, 'users', uid);
-        const userSnap = await withTimeout(getDoc(userRef));
-        return userSnap.exists() ? userSnap.data() : null;
-      } catch (error) {
-        console.error("Firestore getUserProfile failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const users = getMockData('mock_users');
-        return users.find(u => u.uid === uid) || null;
-      }
-    } else {
-      const users = getMockData('mock_users');
-      return users.find(u => u.uid === uid) || null;
-    }
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await withTimeout(getDoc(userRef));
+    return userSnap.exists() ? userSnap.data() : null;
   },
 
   async createUserProfile(uid, userData) {
@@ -78,46 +48,15 @@ export const dbService = {
       role: userData.role || 'owner',
       createdAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        await withTimeout(setDoc(doc(db, 'users', uid), profile));
-        return profile;
-      } catch (error) {
-        console.error("Firestore createUserProfile failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const users = getMockData('mock_users');
-        const filtered = users.filter(u => u.uid !== uid);
-        filtered.push(profile);
-        saveMockData('mock_users', filtered);
-        return profile;
-      }
-    } else {
-      const users = getMockData('mock_users');
-      const filtered = users.filter(u => u.uid !== uid);
-      filtered.push(profile);
-      saveMockData('mock_users', filtered);
-      return profile;
-    }
+    await withTimeout(setDoc(doc(db, 'users', uid), profile));
+    return profile;
   },
 
   // ================= BUSINESS OPERATIONS =================
   async getBusiness(businessId) {
-    if (isFirebaseConnected) {
-      try {
-        const bizRef = doc(db, 'businesses', businessId);
-        const bizSnap = await withTimeout(getDoc(bizRef));
-        return bizSnap.exists() ? bizSnap.data() : null;
-      } catch (error) {
-        console.error("Firestore getBusiness failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const businesses = getMockData('mock_businesses');
-        return businesses.find(b => b.id === businessId) || null;
-      }
-    } else {
-      const businesses = getMockData('mock_businesses');
-      return businesses.find(b => b.id === businessId) || null;
-    }
+    const bizRef = doc(db, 'businesses', businessId);
+    const bizSnap = await withTimeout(getDoc(bizRef));
+    return bizSnap.exists() ? bizSnap.data() : null;
   },
 
   async createBusiness(businessData) {
@@ -128,44 +67,19 @@ export const dbService = {
       type: businessData.type, // 'grocery' | 'medical' | 'rice'
       createdAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        await withTimeout(setDoc(doc(db, 'businesses', businessId), newBusiness));
-        return newBusiness;
-      } catch (error) {
-        console.error("Firestore createBusiness failed, falling back to local:", error);
-        disableFirebaseConnection();
-        insertMockRecord('mock_businesses', newBusiness);
-        return newBusiness;
-      }
-    } else {
-      insertMockRecord('mock_businesses', newBusiness);
-      return newBusiness;
-    }
+    await withTimeout(setDoc(doc(db, 'businesses', businessId), newBusiness));
+    return newBusiness;
   },
 
   // ================= PRODUCT OPERATIONS =================
   async getProducts(businessId) {
-    if (isFirebaseConnected) {
-      try {
-        const q = query(collection(db, 'products'), where('businessId', '==', businessId));
-        const querySnapshot = await withTimeout(getDocs(q));
-        const products = [];
-        querySnapshot.forEach((doc) => {
-          products.push({ id: doc.id, ...doc.data() });
-        });
-        return products;
-      } catch (error) {
-        console.error("Firestore getProducts failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const products = getMockData('mock_products');
-        return products.filter(p => p.businessId === businessId);
-      }
-    } else {
-      const products = getMockData('mock_products');
-      return products.filter(p => p.businessId === businessId);
-    }
+    const q = query(collection(db, 'products'), where('businessId', '==', businessId));
+    const querySnapshot = await withTimeout(getDocs(q));
+    const products = [];
+    querySnapshot.forEach((doc) => {
+      products.push({ id: doc.id, ...doc.data() });
+    });
+    return products;
   },
 
   async addProduct(businessId, productData) {
@@ -178,19 +92,8 @@ export const dbService = {
       minStockAlert: Number(productData.minStockAlert) || 5,
       createdAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        const docRef = await withTimeout(addDoc(collection(db, 'products'), newProduct));
-        return { id: docRef.id, ...newProduct };
-      } catch (error) {
-        console.error("Firestore addProduct failed, falling back to local:", error);
-        disableFirebaseConnection();
-        return insertMockRecord('mock_products', newProduct);
-      }
-    } else {
-      return insertMockRecord('mock_products', newProduct);
-    }
+    const docRef = await withTimeout(addDoc(collection(db, 'products'), newProduct));
+    return { id: docRef.id, ...newProduct };
   },
 
   async updateProduct(businessId, productId, productData) {
@@ -202,79 +105,26 @@ export const dbService = {
       minStockAlert: Number(productData.minStockAlert) || 5,
       updatedAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        const docRef = doc(db, 'products', productId);
-        await withTimeout(updateDoc(docRef, updatedFields));
-        return { id: productId, ...updatedFields };
-      } catch (error) {
-        console.error("Firestore updateProduct failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const products = getMockData('mock_products');
-        const idx = products.findIndex(p => p.id === productId && p.businessId === businessId);
-        if (idx !== -1) {
-          products[idx] = { ...products[idx], ...updatedFields };
-          saveMockData('mock_products', products);
-          return products[idx];
-        }
-        throw new Error('Product not found', { cause: error });
-      }
-    } else {
-      const products = getMockData('mock_products');
-      const idx = products.findIndex(p => p.id === productId && p.businessId === businessId);
-      if (idx !== -1) {
-        products[idx] = { ...products[idx], ...updatedFields };
-        saveMockData('mock_products', products);
-        return products[idx];
-      }
-      throw new Error('Product not found');
-    }
+    const docRef = doc(db, 'products', productId);
+    await withTimeout(updateDoc(docRef, updatedFields));
+    return { id: productId, ...updatedFields };
   },
 
   async deleteProduct(businessId, productId) {
-    if (isFirebaseConnected) {
-      try {
-        const docRef = doc(db, 'products', productId);
-        await withTimeout(deleteDoc(docRef));
-        return true;
-      } catch (error) {
-        console.error("Firestore deleteProduct failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const products = getMockData('mock_products');
-        const filtered = products.filter(p => !(p.id === productId && p.businessId === businessId));
-        saveMockData('mock_products', filtered);
-        return true;
-      }
-    } else {
-      const products = getMockData('mock_products');
-      const filtered = products.filter(p => !(p.id === productId && p.businessId === businessId));
-      saveMockData('mock_products', filtered);
-      return true;
-    }
+    const docRef = doc(db, 'products', productId);
+    await withTimeout(deleteDoc(docRef));
+    return true;
   },
 
   // ================= SUPPLIER OPERATIONS =================
   async getSuppliers(businessId) {
-    if (isFirebaseConnected) {
-      try {
-        const q = query(collection(db, 'suppliers'), where('businessId', '==', businessId));
-        const querySnapshot = await withTimeout(getDocs(q));
-        const suppliers = [];
-        querySnapshot.forEach((doc) => {
-          suppliers.push({ id: doc.id, ...doc.data() });
-        });
-        return suppliers;
-      } catch (error) {
-        console.error("Firestore getSuppliers failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const suppliers = getMockData('mock_suppliers');
-        return suppliers.filter(s => s.businessId === businessId);
-      }
-    } else {
-      const suppliers = getMockData('mock_suppliers');
-      return suppliers.filter(s => s.businessId === businessId);
-    }
+    const q = query(collection(db, 'suppliers'), where('businessId', '==', businessId));
+    const querySnapshot = await withTimeout(getDocs(q));
+    const suppliers = [];
+    querySnapshot.forEach((doc) => {
+      suppliers.push({ id: doc.id, ...doc.data() });
+    });
+    return suppliers;
   },
 
   async addSupplier(businessId, supplierData) {
@@ -283,19 +133,8 @@ export const dbService = {
       businessId,
       createdAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        const docRef = await withTimeout(addDoc(collection(db, 'suppliers'), newSupplier));
-        return { id: docRef.id, ...newSupplier };
-      } catch (error) {
-        console.error("Firestore addSupplier failed, falling back to local:", error);
-        disableFirebaseConnection();
-        return insertMockRecord('mock_suppliers', newSupplier);
-      }
-    } else {
-      return insertMockRecord('mock_suppliers', newSupplier);
-    }
+    const docRef = await withTimeout(addDoc(collection(db, 'suppliers'), newSupplier));
+    return { id: docRef.id, ...newSupplier };
   },
 
   async updateSupplier(businessId, supplierId, supplierData) {
@@ -303,79 +142,26 @@ export const dbService = {
       ...supplierData,
       updatedAt: new Date().toISOString()
     };
-
-    if (isFirebaseConnected) {
-      try {
-        const docRef = doc(db, 'suppliers', supplierId);
-        await withTimeout(updateDoc(docRef, updatedFields));
-        return { id: supplierId, ...updatedFields };
-      } catch (error) {
-        console.error("Firestore updateSupplier failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const suppliers = getMockData('mock_suppliers');
-        const idx = suppliers.findIndex(s => s.id === supplierId && s.businessId === businessId);
-        if (idx !== -1) {
-          suppliers[idx] = { ...suppliers[idx], ...updatedFields };
-          saveMockData('mock_suppliers', suppliers);
-          return suppliers[idx];
-        }
-        throw new Error('Supplier not found', { cause: error });
-      }
-    } else {
-      const suppliers = getMockData('mock_suppliers');
-      const idx = suppliers.findIndex(s => s.id === supplierId && s.businessId === businessId);
-      if (idx !== -1) {
-        suppliers[idx] = { ...suppliers[idx], ...updatedFields };
-        saveMockData('mock_suppliers', suppliers);
-        return suppliers[idx];
-      }
-      throw new Error('Supplier not found');
-    }
+    const docRef = doc(db, 'suppliers', supplierId);
+    await withTimeout(updateDoc(docRef, updatedFields));
+    return { id: supplierId, ...updatedFields };
   },
 
   async deleteSupplier(businessId, supplierId) {
-    if (isFirebaseConnected) {
-      try {
-        const docRef = doc(db, 'suppliers', supplierId);
-        await withTimeout(deleteDoc(docRef));
-        return true;
-      } catch (error) {
-        console.error("Firestore deleteSupplier failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const suppliers = getMockData('mock_suppliers');
-        const filtered = suppliers.filter(s => !(s.id === supplierId && s.businessId === businessId));
-        saveMockData('mock_suppliers', filtered);
-        return true;
-      }
-    } else {
-      const suppliers = getMockData('mock_suppliers');
-      const filtered = suppliers.filter(s => !(s.id === supplierId && s.businessId === businessId));
-      saveMockData('mock_suppliers', filtered);
-      return true;
-    }
+    const docRef = doc(db, 'suppliers', supplierId);
+    await withTimeout(deleteDoc(docRef));
+    return true;
   },
 
   // ================= PURCHASE OPERATIONS (LOGS + AUTO STOCK INCREMENT) =================
   async getPurchases(businessId) {
-    if (isFirebaseConnected) {
-      try {
-        const q = query(collection(db, 'purchases'), where('businessId', '==', businessId));
-        const querySnapshot = await withTimeout(getDocs(q));
-        const purchases = [];
-        querySnapshot.forEach((doc) => {
-          purchases.push({ id: doc.id, ...doc.data() });
-        });
-        return purchases;
-      } catch (error) {
-        console.error("Firestore getPurchases failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const purchases = getMockData('mock_purchases');
-        return purchases.filter(p => p.businessId === businessId);
-      }
-    } else {
-      const purchases = getMockData('mock_purchases');
-      return purchases.filter(p => p.businessId === businessId);
-    }
+    const q = query(collection(db, 'purchases'), where('businessId', '==', businessId));
+    const querySnapshot = await withTimeout(getDocs(q));
+    const purchases = [];
+    querySnapshot.forEach((doc) => {
+      purchases.push({ id: doc.id, ...doc.data() });
+    });
+    return purchases;
   },
 
   async addPurchase(businessId, purchaseData) {
@@ -395,67 +181,28 @@ export const dbService = {
       purchaseDate: purchaseData.purchaseDate || new Date().toISOString()
     };
 
-    if (isFirebaseConnected) {
-      try {
-        // 1. Log the purchase
-        const purchaseRef = await withTimeout(addDoc(collection(db, 'purchases'), newPurchase));
-        
-        // 2. Fetch and update the product stock
-        const productRef = doc(db, 'products', purchaseData.productId);
-        const productSnap = await withTimeout(getDoc(productRef));
-        if (productSnap.exists()) {
-          const currentStock = Number(productSnap.data().stock) || 0;
-          await withTimeout(updateDoc(productRef, { stock: currentStock + quantity }));
-        }
-        return { id: purchaseRef.id, ...newPurchase };
-      } catch (error) {
-        console.error("Firestore addPurchase failed, falling back to local:", error);
-        disableFirebaseConnection();
-        
-        // Local fallback execution
-        const products = getMockData('mock_products');
-        const pIdx = products.findIndex(p => p.id === purchaseData.productId && p.businessId === businessId);
-        if (pIdx !== -1) {
-          products[pIdx].stock = (Number(products[pIdx].stock) || 0) + quantity;
-          saveMockData('mock_products', products);
-        }
-        return insertMockRecord('mock_purchases', newPurchase);
-      }
-    } else {
-      // 1. Update product stock in mock
-      const products = getMockData('mock_products');
-      const pIdx = products.findIndex(p => p.id === purchaseData.productId && p.businessId === businessId);
-      if (pIdx !== -1) {
-        products[pIdx].stock = (Number(products[pIdx].stock) || 0) + quantity;
-        saveMockData('mock_products', products);
-      }
-
-      // 2. Log purchase record
-      return insertMockRecord('mock_purchases', newPurchase);
+    // 1. Log the purchase
+    const purchaseRef = await withTimeout(addDoc(collection(db, 'purchases'), newPurchase));
+    
+    // 2. Fetch and update the product stock
+    const productRef = doc(db, 'products', purchaseData.productId);
+    const productSnap = await withTimeout(getDoc(productRef));
+    if (productSnap.exists()) {
+      const currentStock = Number(productSnap.data().stock) || 0;
+      await withTimeout(updateDoc(productRef, { stock: currentStock + quantity }));
     }
+    return { id: purchaseRef.id, ...newPurchase };
   },
 
   // ================= SALES OPERATIONS (LOGS + AUTO STOCK DECREMENT) =================
   async getSales(businessId) {
-    if (isFirebaseConnected) {
-      try {
-        const q = query(collection(db, 'sales'), where('businessId', '==', businessId));
-        const querySnapshot = await withTimeout(getDocs(q));
-        const sales = [];
-        querySnapshot.forEach((doc) => {
-          sales.push({ id: doc.id, ...doc.data() });
-        });
-        return sales;
-      } catch (error) {
-        console.error("Firestore getSales failed, falling back to local:", error);
-        disableFirebaseConnection();
-        const sales = getMockData('mock_sales');
-        return sales.filter(s => s.businessId === businessId);
-      }
-    } else {
-      const sales = getMockData('mock_sales');
-      return sales.filter(s => s.businessId === businessId);
-    }
+    const q = query(collection(db, 'sales'), where('businessId', '==', businessId));
+    const querySnapshot = await withTimeout(getDocs(q));
+    const sales = [];
+    querySnapshot.forEach((doc) => {
+      sales.push({ id: doc.id, ...doc.data() });
+    });
+    return sales;
   },
 
   async addSale(businessId, saleData) {
@@ -484,51 +231,18 @@ export const dbService = {
       saleDate: new Date().toISOString()
     };
 
-    if (isFirebaseConnected) {
-      try {
-        // 1. Log sale record
-        const saleRef = await withTimeout(addDoc(collection(db, 'sales'), newSale));
+    // 1. Log sale record
+    const saleRef = await withTimeout(addDoc(collection(db, 'sales'), newSale));
 
-        // 2. Loop and update stocks
-        for (const item of items) {
-          const productRef = doc(db, 'products', item.productId);
-          const productSnap = await withTimeout(getDoc(productRef));
-          if (productSnap.exists()) {
-            const currentStock = Number(productSnap.data().stock) || 0;
-            await withTimeout(updateDoc(productRef, { stock: Math.max(0, currentStock - item.quantity) }));
-          }
-        }
-        return { id: saleRef.id, ...newSale };
-      } catch (error) {
-        console.error("Firestore addSale failed, falling back to local:", error);
-        disableFirebaseConnection();
-        
-        // Local fallback execution
-        const products = getMockData('mock_products');
-        for (const item of items) {
-          const pIdx = products.findIndex(p => p.id === item.productId && p.businessId === businessId);
-          if (pIdx !== -1) {
-            const currentStock = Number(products[pIdx].stock) || 0;
-            products[pIdx].stock = Math.max(0, currentStock - item.quantity);
-          }
-        }
-        saveMockData('mock_products', products);
-        return insertMockRecord('mock_sales', newSale);
+    // 2. Loop and update stocks
+    for (const item of items) {
+      const productRef = doc(db, 'products', item.productId);
+      const productSnap = await withTimeout(getDoc(productRef));
+      if (productSnap.exists()) {
+        const currentStock = Number(productSnap.data().stock) || 0;
+        await withTimeout(updateDoc(productRef, { stock: Math.max(0, currentStock - item.quantity) }));
       }
-    } else {
-      // 1. Update product stocks in mock
-      const products = getMockData('mock_products');
-      for (const item of items) {
-        const pIdx = products.findIndex(p => p.id === item.productId && p.businessId === businessId);
-        if (pIdx !== -1) {
-          const currentStock = Number(products[pIdx].stock) || 0;
-          products[pIdx].stock = Math.max(0, currentStock - item.quantity);
-        }
-      }
-      saveMockData('mock_products', products);
-
-      // 2. Log sale record
-      return insertMockRecord('mock_sales', newSale);
     }
+    return { id: saleRef.id, ...newSale };
   }
 };

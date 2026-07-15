@@ -12,38 +12,8 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Check if firebase config is provided and valid (non-placeholder values)
-export const isFirebaseConfigured = 
-  firebaseConfig.apiKey && 
-  firebaseConfig.apiKey !== 'YOUR_API_KEY' &&
-  firebaseConfig.projectId &&
-  firebaseConfig.projectId !== 'YOUR_PROJECT_ID';
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-let app;
-let auth = null;
-let db = null;
-
-export let isFirebaseConnected = isFirebaseConfigured;
-
-export function disableFirebaseConnection() {
-  if (isFirebaseConnected) {
-    isFirebaseConnected = false;
-    console.warn('Firebase connection or database operations failed. Switched to Local Mock Mode.');
-  }
-}
-
-if (isFirebaseConfigured) {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-    console.log('Firebase successfully initialized in Real-Cloud Mode.');
-  } catch (error) {
-    console.error('Error initializing Firebase, falling back to Local Mock Mode:', error);
-    isFirebaseConnected = false;
-  }
-} else {
-  console.log('Firebase configuration not found. Running in Local Mock Mode (using localStorage).');
-}
-
-export { auth, db };
+export { app, auth, db };

@@ -1,9 +1,9 @@
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Database, Cloud, User, Menu } from 'lucide-react';
+import { Cloud, User, Menu } from 'lucide-react';
 
 export default function Navbar({ onMenuClick }) {
-  const { userProfile, isMockMode } = useAuth();
+  const { userProfile } = useAuth();
   const location = useLocation();
 
   // Convert pathname to title
@@ -33,21 +33,12 @@ export default function Navbar({ onMenuClick }) {
         <div 
           style={{
             ...styles.statusBadge,
-            ...(isMockMode ? styles.mockBadge : styles.cloudBadge)
+            ...styles.cloudBadge
           }}
-          title={isMockMode ? "No Firebase credentials detected. Data is saved locally in this browser." : "Connected to Firebase Cloud."}
+          title="Connected to Firebase Cloud."
         >
-          {isMockMode ? (
-            <>
-              <Database size={14} />
-              <span>Local Demo Mode</span>
-            </>
-          ) : (
-            <>
-              <Cloud size={14} />
-              <span>Firebase Connected</span>
-            </>
-          )}
+          <Cloud size={14} />
+          <span>Firebase Connected</span>
         </div>
 
         {/* User profile dropdown pill */}
@@ -108,11 +99,6 @@ const styles = {
     backgroundColor: 'var(--success-light)',
     color: 'var(--success)',
     border: '1px solid rgba(22, 163, 74, 0.15)',
-  },
-  mockBadge: {
-    backgroundColor: 'var(--warning-light)',
-    color: 'var(--warning)',
-    border: '1px solid rgba(217, 119, 6, 0.15)',
   },
   profilePill: {
     display: 'flex',
