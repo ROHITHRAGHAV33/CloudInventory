@@ -12,8 +12,21 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+let app = null;
+let auth = null;
+let db = null;
+let firebaseInitError = null;
 
-export { app, auth, db };
+try {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY' || !firebaseConfig.projectId || firebaseConfig.projectId === 'YOUR_PROJECT_ID') {
+    throw new Error("Firebase credentials are not configured. Please check your local .env file in the project root and ensure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set.");
+  }
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+  firebaseInitError = error.message || error;
+}
+
+export { app, auth, db, firebaseInitError };
