@@ -61,7 +61,7 @@ export default function Purchases() {
 
   // Handle dashboard reorder redirect query parameters
   useEffect(() => {
-    if (products.length > 0 && !loading) {
+    if (products.length > 0 && suppliers.length > 0 && !loading) {
       const params = new URLSearchParams(location.search);
       const prodId = params.get('productId');
       if (prodId) {
@@ -71,13 +71,14 @@ export default function Purchases() {
           setTimeout(() => {
             setSelectedProductId(prodId);
             setUnitPrice(matchingProd.buyingPrice || '');
+            setSelectedSupplierId(suppliers[0]?.id || '');
             setIsFormOpen(true);
             navigate('/purchases', { replace: true });
           }, 0);
         }
       }
     }
-  }, [location, products, loading, navigate]);
+  }, [location, products, suppliers, loading, navigate]);
 
   // Pre-fill buying price when product changes
   const handleProductChange = (productId) => {

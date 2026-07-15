@@ -29,6 +29,8 @@ export default function Products() {
   const [brand, setBrand] = useState('');
   const [riceType, setRiceType] = useState('');
   const [bagWeight, setBagWeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [unit, setUnit] = useState('kg');
 
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +73,8 @@ export default function Products() {
     setBrand('');
     setRiceType('');
     setBagWeight('');
+    setWeight('');
+    setUnit('kg');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -92,6 +96,8 @@ export default function Products() {
     setBrand(prod.brand || '');
     setRiceType(prod.riceType || '');
     setBagWeight(prod.bagWeight || '');
+    setWeight(prod.weight || '');
+    setUnit(prod.unit || 'kg');
     
     setFormError('');
     setIsModalOpen(true);
@@ -132,6 +138,9 @@ export default function Products() {
       productPayload.brand = brand.trim();
       productPayload.riceType = riceType.trim();
       productPayload.bagWeight = bagWeight.trim();
+    } else if (business.type === 'grocery') {
+      productPayload.weight = weight.trim();
+      productPayload.unit = unit.trim();
     }
 
     try {
@@ -195,7 +204,12 @@ export default function Products() {
               <tr>
                 <th>SKU</th>
                 <th>Product Name</th>
-                {business?.type === 'grocery' && <th>Category</th>}
+                 {business?.type === 'grocery' && (
+                   <>
+                     <th>Category</th>
+                     <th>Weight/Unit</th>
+                   </>
+                 )}
                 {business?.type === 'medical' && (
                   <>
                     <th>Batch No</th>
@@ -234,7 +248,12 @@ export default function Products() {
                         )}
                       </div>
                     </td>
-                    {business?.type === 'grocery' && <td>{prod.category}</td>}
+                     {business?.type === 'grocery' && (
+                       <>
+                         <td>{prod.category}</td>
+                         <td>{prod.weight && prod.unit ? `${prod.weight} ${prod.unit}` : 'N/A'}</td>
+                       </>
+                     )}
                     {business?.type === 'medical' && (
                       <>
                         <td><span style={styles.tableStub}>{prod.batchNumber || 'N/A'}</span></td>
@@ -423,6 +442,43 @@ export default function Products() {
                         value={expiryDate}
                         onChange={(e) => setExpiryDate(e.target.value)}
                       />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {business?.type === 'grocery' && (
+                <div style={styles.specificSection}>
+                  <h4 style={styles.sectionHeading}>
+                    <Scale size={16} />
+                    Grocery Specifications
+                  </h4>
+                  <div style={styles.formRow}>
+                    <div className="form-group">
+                      <label className="form-label">Weight</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 500, 1, 2"
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Unit</label>
+                      <select
+                        className="form-select"
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value)}
+                        style={styles.selectField}
+                      >
+                        <option value="g">g (Grams)</option>
+                        <option value="kg">kg (Kilograms)</option>
+                        <option value="l">l (Liters)</option>
+                        <option value="ml">ml (Milliliters)</option>
+                        <option value="pcs">pcs (Pieces)</option>
+                        <option value="pack">pack (Packets)</option>
+                      </select>
                     </div>
                   </div>
                 </div>
