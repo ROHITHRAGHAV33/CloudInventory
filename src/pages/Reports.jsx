@@ -42,7 +42,7 @@ export default function Reports() {
 
   // Helper: currency formatter
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
   };
 
   // Helper: Get product buying price to compute true profits
@@ -254,7 +254,7 @@ export default function Reports() {
                   fill="var(--primary)" 
                   rx={2}
                   style={{ transition: 'all 0.3s ease' }}
-                  title={`Revenue: $${data.revenue}`}
+                  title={`Revenue: ₹${data.revenue}`}
                 />
                 
                 {/* Expense Bar */}
@@ -266,7 +266,7 @@ export default function Reports() {
                   fill="var(--secondary)" 
                   rx={2}
                   style={{ transition: 'all 0.3s ease' }}
-                  title={`Expense: $${data.expense}`}
+                  title={`Expense: ₹${data.expense}`}
                 />
 
                 {/* X-axis Label */}
@@ -416,7 +416,7 @@ export default function Reports() {
                       <tr key={sale.id}>
                         <td>{sale.saleDate?.split('T')[0]}</td>
                         <td style={{ fontWeight: '500' }}>{sale.customerName}</td>
-                        <td style={{ fontWeight: '600', color: 'var(--success)' }}>${Number(sale.grandTotal).toFixed(2)}</td>
+                        <td style={{ fontWeight: '600', color: 'var(--success)' }}>₹{Number(sale.grandTotal).toFixed(2)}</td>
                       </tr>
                     ))}
                     {filteredSales.length === 0 && (
@@ -445,7 +445,7 @@ export default function Reports() {
                       <tr key={pur.id}>
                         <td>{pur.purchaseDate?.split('T')[0]}</td>
                         <td style={{ fontWeight: '500' }}>{pur.productName}</td>
-                        <td style={{ fontWeight: '600', color: 'var(--danger)' }}>${Number(pur.totalPrice).toFixed(2)}</td>
+                        <td style={{ fontWeight: '600', color: 'var(--danger)' }}>₹{Number(pur.totalPrice).toFixed(2)}</td>
                       </tr>
                     ))}
                     {filteredPurchases.length === 0 && (

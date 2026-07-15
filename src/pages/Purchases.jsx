@@ -250,7 +250,7 @@ export default function Purchases() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Unit Buying Price ($)</label>
+                  <label className="form-label">Unit Buying Price (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -281,7 +281,7 @@ export default function Purchases() {
               {quantity && unitPrice && (
                 <div style={styles.costPreview}>
                   <span>Total Calculated Price:</span>
-                  <strong>${(Number(quantity) * Number(unitPrice)).toFixed(2)}</strong>
+                  <strong>₹{(Number(quantity) * Number(unitPrice)).toFixed(2)}</strong>
                 </div>
               )}
 
@@ -336,8 +336,8 @@ export default function Purchases() {
                       <td style={{ fontWeight: '500' }}>{order.productName}</td>
                       <td>{order.supplierName}</td>
                       <td>{order.quantity}</td>
-                      <td>${Number(order.unitPrice).toFixed(2)}</td>
-                      <td style={{ fontWeight: '600' }}>${Number(order.totalPrice).toFixed(2)}</td>
+                       <td>₹{Number(order.unitPrice).toFixed(2)}</td>
+                       <td style={{ fontWeight: '600' }}>₹{Number(order.totalPrice).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -255,8 +255,8 @@ export default function Products() {
                         <td>{prod.bagWeight ? `${prod.bagWeight}` : 'N/A'}</td>
                       </>
                     )}
-                    <td>${Number(prod.buyingPrice).toFixed(2)}</td>
-                    <td>${Number(prod.sellingPrice).toFixed(2)}</td>
+                    <td>₹{Number(prod.buyingPrice).toFixed(2)}</td>
+                    <td>₹{Number(prod.sellingPrice).toFixed(2)}</td>
                     <td style={{ fontWeight: '600', color: isLowStock ? 'var(--danger)' : 'var(--text-primary)' }}>
                       {prod.stock}
                     </td>
@@ -333,7 +333,7 @@ export default function Products() {
               {/* Row 2: Buying Price, Selling Price, Min stock */}
               <div style={styles.formGridThree}>
                 <div className="form-group">
-                  <label className="form-label">Buying Price ($) *</label>
+                  <label className="form-label">Buying Price (₹) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -346,7 +346,7 @@ export default function Products() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Selling Price ($) *</label>
+                  <label className="form-label">Selling Price (₹) *</label>
                   <input
                     type="number"
                     step="0.01"

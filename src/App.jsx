@@ -16,7 +16,7 @@ import Reports from './pages/Reports';
 
 // Route Guard: Only allows authenticated users into the dashboard layout
 function ProtectedLayout() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, business } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
@@ -33,7 +33,7 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout theme-${business?.type || 'grocery'}`}>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main-container">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />

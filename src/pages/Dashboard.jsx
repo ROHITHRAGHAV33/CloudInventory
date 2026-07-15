@@ -59,7 +59,7 @@ export default function Dashboard() {
 
   // Format currency helper
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
   };
 
   // --- BUSINESS TYPE SPECIFIC LOGIC ---

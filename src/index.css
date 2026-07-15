@@ -5,6 +5,7 @@
   --primary: #2563eb;       /* Royal Blue */
   --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
+  --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
   
   --secondary: #475569;     /* Slate */
   --secondary-hover: #334155;
@@ -45,6 +46,31 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+}
+
+/* Business specific themes */
+.theme-medical {
+  --primary: #10b981;       /* Medical Green */
+  --primary-hover: #059669;
+  --primary-light: #ecfdf5;
+  --border-focus: #10b981;
+  --primary-gradient: linear-gradient(135deg, #10b981, #059669);
+}
+
+.theme-grocery {
+  --primary: #2563eb;       /* Grocery Blue */
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --border-focus: #3b82f6;
+  --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.theme-rice {
+  --primary: #854d0e;       /* Rice Brown */
+  --primary-hover: #713f12;
+  --primary-light: #fef8ec;
+  --border-focus: #854d0e;
+  --primary-gradient: linear-gradient(135deg, #a16207, #713f12);
 }
 
 /* Base resets */
@@ -141,12 +167,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: var(--primary-gradient);
   color: white;
+  border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+  filter: brightness(92%);
 }
 
 .btn-secondary {

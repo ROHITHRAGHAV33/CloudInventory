@@ -199,7 +199,7 @@ export default function Sales() {
                     >
                       <div style={styles.prodCardHeader}>
                         <strong style={styles.prodName}>{prod.name}</strong>
-                        <span style={styles.prodPrice}>${Number(prod.sellingPrice).toFixed(2)}</span>
+                        <span style={styles.prodPrice}>₹{Number(prod.sellingPrice).toFixed(2)}</span>
                       </div>
                       <div style={styles.prodCardFooter}>
                         <span style={styles.prodSku}>SKU: {prod.sku}</span>
@@ -256,7 +256,7 @@ export default function Sales() {
                     <div key={item.id} style={styles.cartItemRow}>
                       <div style={styles.cartItemInfo}>
                         <span style={styles.cartItemName}>{item.name}</span>
-                        <span style={styles.cartItemUnitPrice}>${Number(item.sellingPrice).toFixed(2)} each</span>
+                         <span style={styles.cartItemUnitPrice}>₹{Number(item.sellingPrice).toFixed(2)} each</span>
                       </div>
                       
                       <div style={styles.cartItemQtyControls}>
@@ -276,7 +276,7 @@ export default function Sales() {
                       </div>
 
                       <div style={styles.cartItemTotal}>
-                        <span>${(item.sellingPrice * item.quantity).toFixed(2)}</span>
+                        <span>₹{(item.sellingPrice * item.quantity).toFixed(2)}</span>
                         <button 
                           style={styles.removeItemBtn} 
                           onClick={() => removeFromCart(item.id)}
@@ -295,7 +295,7 @@ export default function Sales() {
             <div style={styles.summaryPanel}>
               <div style={styles.summaryRow}>
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               
               <div style={styles.adjustmentsRow}>
@@ -311,7 +311,7 @@ export default function Sales() {
                   />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Discount ($)</label>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Discount (₹)</label>
                   <input
                     type="number"
                     min="0"
@@ -325,12 +325,12 @@ export default function Sales() {
 
               <div style={styles.summaryRow}>
                 <span>Tax Total</span>
-                <span>${taxAmount.toFixed(2)}</span>
+                <span>₹{taxAmount.toFixed(2)}</span>
               </div>
 
               <div style={{ ...styles.summaryRow, borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
                 <strong style={{ fontSize: '1.1rem' }}>Grand Total</strong>
-                <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>${grandTotal.toFixed(2)}</strong>
+                <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>₹{grandTotal.toFixed(2)}</strong>
               </div>
             </div>
 
@@ -412,8 +412,8 @@ export default function Sales() {
                     <tr key={idx}>
                       <td style={styles.receiptTd}>{item.name}</td>
                       <td style={{ ...styles.receiptTd, textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ ...styles.receiptTd, textAlign: 'right' }}>${Number(item.unitPrice).toFixed(2)}</td>
-                      <td style={{ ...styles.receiptTd, textAlign: 'right', fontWeight: '500' }}>${Number(item.subtotal).toFixed(2)}</td>
+                      <td style={{ ...styles.receiptTd, textAlign: 'right' }}>₹{Number(item.unitPrice).toFixed(2)}</td>
+                      <td style={{ ...styles.receiptTd, textAlign: 'right', fontWeight: '500' }}>₹{Number(item.subtotal).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -425,19 +425,19 @@ export default function Sales() {
               <div style={styles.receiptSummary}>
                 <div style={styles.receiptSummaryRow}>
                   <span>Subtotal:</span>
-                  <span>${Number(lastSaleRecord.totalAmount).toFixed(2)}</span>
+                  <span>₹{Number(lastSaleRecord.totalAmount).toFixed(2)}</span>
                 </div>
                 <div style={styles.receiptSummaryRow}>
                   <span>Tax:</span>
-                  <span>${Number(lastSaleRecord.tax).toFixed(2)}</span>
+                  <span>₹{Number(lastSaleRecord.tax).toFixed(2)}</span>
                 </div>
                 <div style={styles.receiptSummaryRow}>
                   <span>Discount:</span>
-                  <span>-${Number(lastSaleRecord.discount).toFixed(2)}</span>
+                  <span>-₹{Number(lastSaleRecord.discount).toFixed(2)}</span>
                 </div>
                 <div style={{ ...styles.receiptSummaryRow, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)', borderTop: '1px dashed var(--border-color)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
                   <span>Total Amount Paid:</span>
-                  <span>${Number(lastSaleRecord.grandTotal).toFixed(2)}</span>
+                  <span>₹{Number(lastSaleRecord.grandTotal).toFixed(2)}</span>
                 </div>
               </div>
 

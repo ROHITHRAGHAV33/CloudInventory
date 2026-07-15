@@ -178,7 +178,7 @@ const styles = {
     color: '#64748b',
   },
   activeIcon: {
-    color: '#3b82f6', // primary blue for active icon
+    color: 'var(--primary)', // dynamic color matching business theme
   },
   navText: {
     fontFamily: 'var(--font-sans)',
